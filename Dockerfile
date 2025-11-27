@@ -1,10 +1,11 @@
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies + PHP extensions
 RUN apt-get update && apt-get install -y \
     git curl zip unzip \
     libpng-dev libonig-dev libxml2-dev \
     libzip-dev libjpeg-dev libfreetype6-dev \
+    nodejs npm \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql zip exif pcntl bcmath gd
 
@@ -20,8 +21,12 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
+# Install Node dependencies & build assets
+RUN npm install
+RUN npm run build
+
 # Set permissions for Laravel
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache public/build
 
 # Expose port
 EXPOSE 8000
